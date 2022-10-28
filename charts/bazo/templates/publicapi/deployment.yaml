@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.publicapi.php.name" . }}
+  labels:
+    {{- include "bazo.publicapi.labelsPHP" . | nindent 4 }}
+spec:
+  {{- if not .Values.publicapi.php.autoscaling.enabled }}
+  replicas: {{ .Values.publicapi.php.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.publicapi.selectorLabelsPHP" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/common/configmap.yaml") . | sha256sum }}
+        {{- with .Values.publicapi.php.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bazo.publicapi.selectorLabelsPHP" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.publicapi.php.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.publicapi.php.securityContext | nindent 12 }}
+          image: "{{ .Values.publicapi.php.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.publicapi.php.image.pullPolicy }}
+          ports:
+            - name: php-fpm
+              containerPort: 9000
+              protocol: TCP
+          envFrom:
+            - prefix: ''
+              configMapRef:
+                name: {{ include "bazo.configmap" . }}
+          {{- if .Values.newrelic.deploy }}
+          volumeMounts:
+            - mountPath: /usr/local/etc/php/conf.d/newrelic.ini
+              name: vol1
+              subPath: newrelic.ini
+          {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.publicapi.php.resources | nindent 12 }}
+      {{- if .Values.newrelic.deploy }}
+      volumes:
+        - configMap:
+            defaultMode: 256
+            items:
+              - key: newrelic.ini
+                mode: 511
+                path: newrelic.ini
+            name: {{ include "bazo.newrelic.name" . }}-php-config
+            optional: false
+          name: vol1
+      {{- end }}
+      {{- with .Values.publicapi.php.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.publicapi.php.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.publicapi.php.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.publicapi.web.name" . }}
+  labels:
+    {{- include "bazo.publicapi.labelsWeb" . | nindent 4 }}
+spec:
+  {{- if not .Values.publicapi.nginx.autoscaling.enabled }}
+  replicas: {{ .Values.publicapi.nginx.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.publicapi.selectorLabelsWeb" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.publicapi.nginx.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bazo.publicapi.selectorLabelsWeb" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.publicapi.nginx.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.publicapi.nginx.securityContext | nindent 12 }}
+          image: "{{ .Values.publicapi.nginx.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.publicapi.nginx.image.pullPolicy }}
+          env:
+            - name: FPM_HOST
+              value: {{ include "bazo.publicapi.php.name" . }}:{{ .Values.publicapi.php.service.port }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 80
+          readinessProbe:
+            tcpSocket:
+              port: 80
+          resources:
+            {{- toYaml .Values.publicapi.nginx.resources | nindent 12 }}
+      {{- with .Values.publicapi.nginx.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.publicapi.nginx.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.publicapi.nginx.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

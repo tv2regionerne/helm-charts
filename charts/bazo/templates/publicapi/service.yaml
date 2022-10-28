@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bazo.publicapi.php.name" . }}
+  labels:
+    {{- include "bazo.publicapi.labelsPHP" . | nindent 4 }}
+spec:
+  type: {{ .Values.publicapi.php.service.type }}
+  ports:
+    - port: {{ .Values.publicapi.php.service.port }}
+      targetPort: 9000
+      protocol: TCP
+      name: php-fpm
+  selector:
+    {{- include "bazo.publicapi.selectorLabelsPHP" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bazo.publicapi.web.name" . }}
+  labels:
+    {{- include "bazo.publicapi.labelsWeb" . | nindent 4 }}
+spec:
+  type: {{ .Values.publicapi.nginx.service.type }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "bazo.publicapi.selectorLabelsWeb" . | nindent 4 }}

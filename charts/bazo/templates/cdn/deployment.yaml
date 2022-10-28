@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.cdn.php.name" . }}
+  labels:
+    {{- include "bazo.cdn.labelsPHP" . | nindent 4 }}
+spec:
+  {{- if not .Values.cdn.php.autoscaling.enabled }}
+  replicas: {{ .Values.cdn.php.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.cdn.selectorLabelsPHP" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/common/configmap.yaml") . | sha256sum }}
+        {{- with .Values.cdn.php.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bazo.cdn.selectorLabelsPHP" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.cdn.php.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.cdn.php.securityContext | nindent 12 }}
+          image: "{{ .Values.cdn.php.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.cdn.php.image.pullPolicy }}
+          ports:
+            - name: php-fpm
+              containerPort: 9000
+              protocol: TCP
+          envFrom:
+            - prefix: ''
+              configMapRef:
+                name: {{ include "bazo.configmap" . }}
+          {{- if .Values.newrelic.deploy }}
+          volumeMounts:
+            - mountPath: /usr/local/etc/php/conf.d/newrelic.ini
+              name: vol1
+              subPath: newrelic.ini
+          {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 9000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.cdn.php.resources | nindent 12 }}
+      {{- if .Values.newrelic.deploy }}
+      volumes:
+        - configMap:
+            defaultMode: 256
+            items:
+              - key: newrelic.ini
+                mode: 511
+                path: newrelic.ini
+            name: {{ include "bazo.newrelic.name" . }}-php-config
+            optional: false
+          name: vol1
+      {{- end }}
+      {{- with .Values.cdn.php.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdn.php.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdn.php.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.cdn.web.name" . }}
+  labels:
+    {{- include "bazo.cdn.labelsWeb" . | nindent 4 }}
+spec:
+  {{- if not .Values.cdn.nginx.autoscaling.enabled }}
+  replicas: {{ .Values.cdn.nginx.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.cdn.selectorLabelsWeb" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.cdn.nginx.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "bazo.cdn.selectorLabelsWeb" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.cdn.nginx.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.cdn.nginx.securityContext | nindent 12 }}
+          image: "{{ .Values.cdn.nginx.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.cdn.nginx.image.pullPolicy }}
+          env:
+            - name: FPM_HOST
+              value: {{ include "bazo.cdn.php.name" . }}:{{ .Values.cdn.php.service.port }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 80
+          readinessProbe:
+            tcpSocket:
+              port: 80
+          resources:
+            {{- toYaml .Values.cdn.nginx.resources | nindent 12 }}
+      {{- with .Values.cdn.nginx.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdn.nginx.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cdn.nginx.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

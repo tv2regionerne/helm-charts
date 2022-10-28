@@ -1,0 +1,122 @@
+{{- if .Values.common.config.generate }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "bazo.configmap" . }}
+  labels:
+    {{- include "bazo.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  ALGOLIA_APP_ID: "{{ .Values.common.services.algolia.appid }}"
+  ALGOLIA_SECRET: "{{ .Values.common.services.algolia.secret }}"
+  ANALYTICS_VIEW_ID: {{ .Values.common.services.google.ga.viewid | quote }}
+  APP_DEBUG: {{ .Values.common.config.debug | quote }}
+  APP_ENV: {{ .Values.common.config.environment }}
+  APP_KEY: {{ .Values.common.config.secretKey | quote }}
+  APP_NAME: {{ .Values.common.config.name | quote }}
+  APP_URL: https://{{ .Values.common.domains.admin }}
+  AWS_ACCESS_KEY_ID: {{ .Values.common.services.aws.key | quote }}
+  AWS_BUCKET: {{ .Values.common.services.aws.bucket | quote }}
+  AWS_DEFAULT_REGION: {{ .Values.common.services.aws.region | quote }}
+  {{- if .Values.common.services.aws.endpoint }}
+  AWS_DEFAULT_ENDPOINT: {{ .Values.common.services.aws.endpoint | quote }}
+  {{- end }}
+  AWS_SECRET_ACCESS_KEY: {{ .Values.common.services.aws.key | quote }}
+  BEYONDWORDS_PROJECT: {{ .Values.common.services.beyondwords.project | quote }}
+  BEYONDWORDS_TOKEN: {{ .Values.common.services.beyondwords.token | quote }}
+  CACHE_DRIVER: {{ .Values.common.config.cache.driver | quote }}
+  {{- if .Values.mysql.deploy }}
+  DB_CONNECTION: "mysql"
+  DB_DATABASE: {{ .Values.mysql.auth.database | quote }}
+  DB_HOST: "{{ include "bazo.name" . }}-mysql-primary"
+  DB_PASSWORD: {{ .Values.mysql.auth.password | quote }}
+  DB_PORT: "3306"
+  DB_USERNAME: {{ .Values.mysql.auth.username | quote }}
+  {{- else }}
+  DB_CONNECTION: "mysql"
+  DB_DATABASE: {{ .Values.common.services.database.name | quote }}
+  DB_HOST: {{ .Values.common.services.database.host | quote }}
+  DB_PASSWORD: {{ .Values.common.services.database.pass | quote }}
+  DB_PORT: {{ .Values.common.services.database.port | quote }}
+  DB_USERNAME: {{ .Values.common.services.database.user | quote }}
+  {{- end }}
+  DOCUMENT_DISK: {{ .Values.common.config.disks.documents | quote }}
+  DOMAIN_API_PRIVATE: {{ .Values.common.domains.privateapi | quote }}
+  DOMAIN_API_PUBLIC: {{ .Values.common.domains.publicapi | quote }}
+  DOMAIN_CDN: {{ .Values.common.domains.cdn | quote }}
+  DOMAIN_DEVELOPER: {{ .Values.common.domains.admin | quote }}
+  IMAGE_DISK: {{ .Values.common.config.disks.images | quote }}
+  {{- if .Values.common.services.intercom.enable }}
+  INTERCOM_ENABLED: "true"
+  INTERCOM_APP_ID: {{ .Values.common.services.intercom.appid | quote }}
+  INTERCOM_ID_HASH: {{ .Values.common.services.intercom.idhash | quote }}
+  INTERCOM_TOKEN: {{ .Values.common.services.intercom.token | quote }}
+  {{- end }}
+  KALTURA_PARTNER_ID: {{ .Values.common.services.kaltura.partnerid | quote }}
+  KALTURA_SECRET: {{ .Values.common.services.kaltura.secret | quote }}
+  KALTURA_SYNC_ENABLED: "true"
+  LOG_CHANNEL: {{ .Values.common.config.log.channel | quote }}
+  MAIL_DRIVER: {{ .Values.common.services.mail.driver | quote }}
+  MAIL_FROM_ADDRESS: {{ .Values.common.services.mail.from.email | quote }}
+  MAIL_FROM_NAME: {{ .Values.common.services.mail.from.name | quote }}
+  {{- if contains "smtp" .Values.common.services.mail.driver }}
+  MAIL_ENCRYPTION: {{ .Values.common.services.mail.smtp.encryption | quote }}
+  MAIL_HOST: {{ .Values.common.services.mail.smtp.host | quote }}
+  MAIL_PASSWORD: {{ .Values.common.services.mail.smtp.password | quote }}
+  MAIL_PORT: {{ .Values.common.services.mail.smtp.port | quote }}
+  MAIL_USERNAME: {{ .Values.common.services.mail.smtp.username | quote }}
+  {{- end }}
+  {{- if contains "mailgun" .Values.common.services.mail.driver }}
+  MAILGUN_DOMAIN: {{ .Values.common.services.mail.mailgun.domain | quote }}
+  MAILGUN_ENDPOINT: {{ .Values.common.services.mail.mailgun.endpoint | quote }}
+  MAILGUN_SECRET: {{ .Values.common.services.mail.mailgun.secret | quote }}
+  {{- end }}
+  {{- if .Values.common.services.paqle.enable }}
+  PAQLE_OPINIONS_PASSWORD: {{ .Values.common.services.paqle.opinions.password | quote }}
+  PAQLE_OPINIONS_USERNAME: {{ .Values.common.services.paqle.opinions.username | quote }}
+  {{- if .Values.common.services.paqle.updates.electionids }}
+  PAQLE_UPDATES_ELECTIONIDS: {{ .Values.common.services.paqle.updates.electionids | quote }}
+  {{- end }}
+  {{- if .Values.common.services.paqle.updates.segmentid }}
+  PAQLE_UPDATES_SEGMENT: {{ .Values.common.services.paqle.updates.segmentid | quote }}
+  {{- end }}
+  PAQLE_UPDATES_PASSWORD: {{ .Values.common.services.paqle.updates.password | quote }}
+  PAQLE_UPDATES_USERNAME: {{ .Values.common.services.paqle.updates.username | quote }}
+  {{- end }}
+  PASSPORT_PRIVATE_KEY: {{ .Values.common.auth.privateKey | quote }}
+  PASSPORT_PUBLIC_KEY: {{ .Values.common.auth.publicKey | quote }}
+  {{- if .Values.common.services.pusher }}
+  BROADCAST_DRIVER: pusher
+  PUSHER_APP_CLUSTER: {{ .Values.common.services.pusher.cluster | quote }}
+  PUSHER_APP_ID: {{ .Values.common.services.pusher.id | quote }}
+  PUSHER_APP_KEY: {{ .Values.common.services.pusher.key | quote }}
+  PUSHER_APP_SECRET: {{ .Values.common.services.pusher.secret | quote }}
+  {{- else }}
+  BROADCAST_DRIVER: null
+  {{- end }}
+  {{- if .Values.redis.deploy }}
+  QUEUE_CONNECTION: redis
+  REDIS_HOST: "{{ include "bazo.name" . }}-redis-master"
+  REDIS_PASSWORD: {{ .Values.common.services.redis.password | quote }}
+  REDIS_PORT: {{ .Values.common.services.redis.port | quote }}
+  {{- else }}
+  QUEUE_CONNECTION: sync
+  {{- end }}
+  REGION: {{ .Values.common.config.region | quote }}
+  SCANPIX_UPLOAD_ENABLED: "false"
+  SCANPIX_UPLOAD_REGION: {{ .Values.common.config.region | quote }}
+  SCOUT_DRIVER: "null"
+  SCOUT_PREFIX: production.
+  SCOUT_QUEUE: "true"
+  {{- if .Values.common.services.sentry }}
+  SENTRY_LARAVEL_DSN: {{ .Values.common.services.sentry.dsn | quote }}
+  SENTRY_TRACES_SAMPLE_RATE: {{ .Values.common.services.sentry.trace_rate | quote }}
+  {{- end }}
+  SESSION_DRIVER: redis
+  SESSION_LIFETIME: "120"
+  TELESCOPE_ENABLED: "false"
+  WEBFORM_DISK: {{ .Values.common.config.disks.webform | quote }}
+{{- end }}

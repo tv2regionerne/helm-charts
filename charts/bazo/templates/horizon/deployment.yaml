@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.fullname" . }}-horizon
+  labels:
+    {{- include "bazo.horizon.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.horizon.autoscaling.enabled }}
+  replicas: {{ .Values.horizon.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.horizon.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/common/configmap.yaml") . | sha256sum }}
+        {{- with .Values.horizon.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bazo.horizon.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.horizon.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.horizon.securityContext | nindent 12 }}
+          image: "{{ .Values.horizon.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.horizon.image.pullPolicy }}
+          envFrom:
+            - prefix: ''
+              configMapRef:
+                name: {{ include "bazo.serviceAccountName" . }}-config
+          resources:
+            {{- toYaml .Values.horizon.resources | nindent 12 }}
+      {{- with .Values.horizon.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.horizon.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.horizon.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

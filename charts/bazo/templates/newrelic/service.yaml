@@ -1,0 +1,17 @@
+{{- if .Values.newrelic.deploy -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bazo.newrelic.name" . }}
+  labels:
+    {{- include "bazo.newrelic.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.newrelic.service.type }}
+  ports:
+    - port: {{ .Values.newrelic.service.port }}
+      targetPort: 31339
+      protocol: TCP
+      name: newrelic-daemon
+  selector:
+    {{- include "bazo.newrelic.selectorLabels" . | nindent 4 }}
+{{- end }}

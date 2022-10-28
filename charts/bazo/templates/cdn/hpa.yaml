@@ -1,0 +1,28 @@
+{{- if .Values.cdn.php.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bazo.cdn.php.name" . }}
+  labels:
+    {{- include "bazo.cdn.labelsPHP" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "bazo.cdn.php.name" . }}
+  minReplicas: {{ .Values.cdn.php.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.cdn.php.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.cdn.php.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.cdn.php.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.cdn.php.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.cdn.php.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

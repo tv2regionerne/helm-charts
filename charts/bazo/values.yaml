@@ -1,0 +1,929 @@
+common:
+  existingConfigmap: ""
+  updateExistingConfigmap: false
+  auth:
+    privateKey: ""
+    publicKey: ""
+  config:
+    generate: false
+    name: "Bazo"
+    secretKey: "longrandomsecretstring"
+    environment: "production"
+    debug: false
+    region: ""
+    log:
+      channel: stderr
+    cache:
+      driver: "redis"
+    disks:
+      images: "s3"
+      documents: "s3"
+      webform: "s3"
+  domains:
+    admin: ""
+    publicapi: ""
+    privateapi: ""
+    cdn: ""
+  services:
+    database:
+      driver: "mysql"
+      host: ""
+      port: "3306"
+      name: ""
+      user: ""
+      pass: ""
+    redis:
+      host: "redis-master"
+      port: "6379"
+      password: "null"
+    mail:
+      driver: "mailgun"
+      from:
+        email: ""
+        name: ""
+      mailgun:
+        domain: ""
+        endpoint: ""
+        secret: ""
+      smtp:
+        host: ""
+        username: ""
+        password: ""
+        port: "587"
+        encryption: "TLS"
+    kaltura:
+      enable: false
+      partnerid: ""
+      secret: ""
+      sync: false
+    google:
+      ga:
+        viewid: ""
+    aws:
+      region: ""
+      key: ""
+      secret: ""
+      bucket: ""
+      endpoint: ""
+    sentry:
+      enable: false
+      dsn: "https://5a6cd21e894748b0a8040a0b2493370b@o592480.ingest.sentry.io/5740880"
+      trace_rate: 0.01
+    pusher:
+      enable: false
+      cluster: "eu"
+      id: ""
+      key: ""
+      secret: ""
+    algolia:
+      enable: false
+      appid: ""
+      secret: ""
+    beyondwords:
+      enable: false
+      project: ""
+      token: ""
+    intercom:
+      enable: false
+      appid: ""
+      idhash: ""
+      token: ""
+    paqle:
+      enable: false
+      updates:
+        username: "tv2r"
+        password: ""
+        electionids: ""
+        segmentid: ""
+      opinions:
+        username: "tv2r"
+        password: ""
+
+image:
+  tag: "v5.3.0"
+  imagePullSecrets: []
+
+serviceAccount:
+    # Specifies whether a service account should be created
+    create: true
+    # Annotations to add to the service account
+    annotations: {}
+    # The name of the service account to use.
+    # If not set and create is true, a name is generated using the fullname template
+    name: ""
+
+admin:
+  deploy: true
+
+  php:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-fpm
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+      # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 9000
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  nginx:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-nginx
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+      # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: []
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: admin.region.bazo.dk
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+cdn:
+  deploy: true
+
+  php:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-fpm
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 9000
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  nginx:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-nginx
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+      #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: []
+      # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: cdn.region.bazo.dk
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+cms:
+  deploy: true
+
+  replicaCount: 1
+
+  config:
+    logo: "null"
+    push_sound: "false"
+
+  image:
+    repository: tv2regionerne/cms
+    pullPolicy: IfNotPresent
+    tag: "whitelabel-3-ebb0316"
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  podAnnotations: { }
+
+  podSecurityContext: { }
+  # fsGroup: 2000
+
+  securityContext: { }
+    # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: { }
+
+  tolerations: [ ]
+
+  affinity: { }
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: [ ]
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: cms.region.bazo.dk
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: [ ]
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+publicapi:
+  deploy: true
+
+  php:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-fpm
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 9000
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  nginx:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-nginx
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: []
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: cdn.region.bazo.dk
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+privateapi:
+  deploy: true
+
+  php:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-fpm
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 9000
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  nginx:
+    replicaCount: 1
+
+    image:
+      repository: tv2regionerne/bazo-nginx
+      pullPolicy: IfNotPresent
+
+    nameOverride: ""
+    fullnameOverride: ""
+
+    podAnnotations: { }
+
+    podSecurityContext: { }
+    # fsGroup: 2000
+
+    securityContext: { }
+      # capabilities:
+      #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+    service:
+      type: ClusterIP
+      port: 80
+
+    resources:
+      # We usually recommend not to specify default resources and to leave this as a conscious
+      # choice for the user. This also increases chances charts run on environments with little
+      # resources, such as Minikube. If you do want to specify resources, uncomment the following
+      # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+      limits:
+        cpu: 500m
+        memory: 1024Mi
+      requests:
+        cpu: 100m
+        memory: 512Mi
+
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 100
+      targetCPUUtilizationPercentage: 80
+      targetMemoryUtilizationPercentage: 80
+
+    nodeSelector: { }
+
+    tolerations: [ ]
+
+    affinity: { }
+
+  ingress:
+    enabled: false
+    className: ""
+    annotations: []
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: cdn.region.bazo.dk
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+horizon:
+  # Default values for bazo.
+  # This is a YAML-formatted file.
+  # Declare variables to be passed into your templates.
+
+  replicaCount: 1
+
+  image:
+    repository: tv2regionerne/bazo-horizon
+    pullPolicy: IfNotPresent
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+  # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+  # runAsUser: 1000
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits:
+      cpu: 500m
+      memory: 1024Mi
+    requests:
+      cpu: 100m
+      memory: 512Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+newrelic:
+  deploy: false
+
+  license: ""
+
+  replicaCount: 1
+
+  image:
+    repository: newrelic/php-daemon
+    pullPolicy: IfNotPresent
+    tag: "latest"
+
+  nameOverride: ""
+  fullnameOverride: ""
+
+  podAnnotations: { }
+
+  podSecurityContext: { }
+  # fsGroup: 2000
+
+  securityContext: { }
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+  service:
+    type: ClusterIP
+    port: 31339
+
+  resources:
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    limits:
+      cpu: 400m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+  nodeSelector: { }
+
+  tolerations: [ ]
+
+  affinity: { }
+
+redis:
+  deploy: false
+  architecture: standalone
+  auth:
+    enabled: false
+    sentinel: false
+    password: ""
+  commonConfiguration: |-
+    # Enable AOF https://redis.io/topics/persistence#append-only-file
+    appendonly no
+    # Disable RDB persistence, AOF persistence already enabled.
+    save ""
+  master:
+    disableCommands: []
+    resources:
+      limits: { }
+      requests: { }
+    persistence:
+      enabled: false
+  sentinel:
+    enabled: false
+  metrics:
+    enabled: true
+
+mysql:
+  deploy: false
+  ## @param architecture MySQL architecture (`standalone` or `replication`)
+  ##
+  architecture: standalone
+  auth:
+    ## @param auth.rootPassword Password for the `root` user. Ignored if existing secret is provided
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#setting-the-root-password-on-first-run
+    ##
+    rootPassword: ""
+    ## @param auth.createDatabase Wheter to create the .Values.auth.database or not
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#creating-a-database-on-first-run
+    ##
+    createDatabase: true
+    ## @param auth.database Name for a custom database to create
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#creating-a-database-on-first-run
+    ##
+    database: "my_database"
+    ## @param auth.username Name for a custom user to create
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#creating-a-database-user-on-first-run
+    ##
+    username: ""
+    ## @param auth.password Password for the new user. Ignored if existing secret is provided
+    ##
+    password: ""
+    ## @param auth.replicationUser MySQL replication user
+    ## ref: https://github.com/bitnami/containers/tree/main/bitnami/mysql#setting-up-a-replication-cluster
+    ##
+    replicationUser: replicator
+    ## @param auth.replicationPassword MySQL replication user password. Ignored if existing secret is provided
+    ##
+    replicationPassword: ""
+    ## @param auth.existingSecret Use existing secret for password details. The secret has to contain the keys `mysql-root-password`, `mysql-replication-password` and `mysql-password`
+    ## NOTE: When it's set the auth.rootPassword, auth.password, auth.replicationPassword are ignored.
+    ##
+    existingSecret: ""
+    ## @param auth.usePasswordFiles Mount credentials as files instead of using an environment variable
+    ##
+    usePasswordFiles: false
+    ## @param auth.customPasswordFiles Use custom password files when `auth.usePasswordFiles` is set to `true`. Define path for keys `root` and `user`, also define `replicator` if `architecture` is set to `replication`
+    ## Example:
+    ## customPasswordFiles:
+    ##   root: /vault/secrets/mysql-root
+    ##   user: /vault/secrets/mysql-user
+    ##   replicator: /vault/secrets/mysql-replicator
+    ##
+    customPasswordFiles: { }
+  primary:
+    persistence:
+      ## @param primary.persistence.enabled Enable persistence on MySQL primary replicas using a `PersistentVolumeClaim`. If false, use emptyDir
+      ##
+      enabled: true
+      ## @param primary.persistence.existingClaim Name of an existing `PersistentVolumeClaim` for MySQL primary replicas
+      ## NOTE: When it's set the rest of persistence parameters are ignored
+      ##
+      existingClaim: ""
+      ## @param primary.persistence.storageClass MySQL primary persistent volume storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      storageClass: ""
+      ## @param primary.persistence.annotations MySQL primary persistent volume claim annotations
+      ##
+      annotations: { }
+      ## @param primary.persistence.accessModes MySQL primary persistent volume access Modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param primary.persistence.size MySQL primary persistent volume size
+      ##
+      size: 30Gi
+      ## @param primary.persistence.selector Selector to match an existing Persistent Volume
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: { }
+  secondary:
+    ## @param secondary.name Name of the secondary database (eg secondary, slave, ...)
+    ##
+    name: secondary
+    ## @param secondary.replicaCount Number of MySQL secondary replicas
+    ##
+    replicaCount: 1
+    persistence:
+      ## @param secondary.persistence.enabled Enable persistence on MySQL secondary replicas using a `PersistentVolumeClaim`
+      ##
+      enabled: true
+      ## @param secondary.persistence.storageClass MySQL secondary persistent volume storage Class
+      ## If defined, storageClassName: <storageClass>
+      ## If set to "-", storageClassName: "", which disables dynamic provisioning
+      ## If undefined (the default) or set to null, no storageClassName spec is
+      ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+      ##   GKE, AWS & OpenStack)
+      ##
+      storageClass: ""
+      ## @param secondary.persistence.annotations MySQL secondary persistent volume claim annotations
+      ##
+      annotations: { }
+      ## @param secondary.persistence.accessModes MySQL secondary persistent volume access Modes
+      ##
+      accessModes:
+        - ReadWriteOnce
+      ## @param secondary.persistence.size MySQL secondary persistent volume size
+      ##
+      size: 20Gi
+      ## @param secondary.persistence.selector Selector to match an existing Persistent Volume
+      ## selector:
+      ##   matchLabels:
+      ##     app: my-app
+      ##
+      selector: { }

@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bazo.privateapi.php.name" . }}
+  labels:
+    {{- include "bazo.privateapi.labelsPHP" . | nindent 4 }}
+spec:
+  type: {{ .Values.privateapi.php.service.type }}
+  ports:
+    - port: {{ .Values.privateapi.php.service.port }}
+      targetPort: 9000
+      protocol: TCP
+      name: php-fpm
+  selector:
+    {{- include "bazo.privateapi.selectorLabelsPHP" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "bazo.privateapi.web.name" . }}
+  labels:
+    {{- include "bazo.privateapi.labelsWeb" . | nindent 4 }}
+spec:
+  type: {{ .Values.privateapi.nginx.service.type }}
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "bazo.privateapi.selectorLabelsWeb" . | nindent 4 }}

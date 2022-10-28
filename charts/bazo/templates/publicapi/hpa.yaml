@@ -1,0 +1,28 @@
+{{- if .Values.publicapi.php.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bazo.publicapi.php.name" . }}
+  labels:
+    {{- include "bazo.publicapi.labelsPHP" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "bazo.publicapi.php.name" . }}
+  minReplicas: {{ .Values.publicapi.php.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.publicapi.php.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.publicapi.php.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.publicapi.php.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.publicapi.php.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.publicapi.php.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}

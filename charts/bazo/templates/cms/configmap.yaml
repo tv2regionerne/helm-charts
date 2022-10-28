@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "bazo.cms.name" . }}-config
+  labels:
+    {{- include "bazo.cms.labels" . | nindent 4 }}
+  {{- with .Values.serviceAccount.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  config.json: |-
+    {
+      "LOGO": {{ .Values.cms.config.logo }},
+      "BAZO_CDN": "http://{{ .Values.common.domains.cdn }}/images/",
+      "BAZO_PRIVATE": "http://{{ .Values.common.domains.privateapi }}/",
+      "BAZO_PUBLIC": "http://{{ .Values.common.domains.publicapi }}/",
+      "BAZO_SERVICE": "http://{{ .Values.common.domains.admin }}/",
+      "INTERCOM_APP_ID": {{ .Values.common.services.intercom.appid | quote }},
+      "PUSHER_CLUSTER": {{ .Values.common.services.pusher.cluster | quote }},
+      "PUSHER_KEY": {{ .Values.common.services.pusher.key | quote }},
+      "PUSH_NOTIFICATION_SOUND": {{ .Values.cms.config.push_sound }}
+    }

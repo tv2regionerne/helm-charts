@@ -1,0 +1,30 @@
+{{- if .Values.newrelic.deploy -}}
+{{- if .Values.newrelic.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bazo.newrelic.name" . }}
+  labels:
+    {{- include "bazo.newrelic.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "bazo.newrelic.name" . }}
+  minReplicas: {{ .Values.newrelic.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.newrelic.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.newrelic.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.newrelic.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.newrelic.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.newrelic.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
+{{- end }}

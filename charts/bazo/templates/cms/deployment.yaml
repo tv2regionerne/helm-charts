@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "bazo.cms.name" . }}
+  labels:
+    {{- include "bazo.cms.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.cms.autoscaling.enabled }}
+  replicas: {{ .Values.cms.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "bazo.cms.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/cms/configmap.yaml") . | sha256sum }}
+        {{- with .Values.cms.podAnnotations }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "bazo.cms.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "bazo.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.cms.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.cms.securityContext | nindent 12 }}
+          image: "{{ .Values.cms.image.repository }}:{{ .Values.cms.image.tag }}"
+          imagePullPolicy: {{ .Values.cms.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /usr/share/nginx/html/config.json
+              name: vol1
+              subPath: config.json
+          livenessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.cms.resources | nindent 12 }}
+      volumes:
+        - configMap:
+            defaultMode: 256
+            items:
+              - key: config.json
+                mode: 511
+                path: config.json
+            name: {{ include "bazo.cms.name" . }}-config
+            optional: false
+          name: vol1
+      {{- with .Values.cms.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cms.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.cms.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

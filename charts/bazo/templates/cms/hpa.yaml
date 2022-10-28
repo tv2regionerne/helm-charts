@@ -1,0 +1,28 @@
+{{- if .Values.cms.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bazo.cms.name" . }}
+  labels:
+    {{- include "bazo.cms.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "bazo.cms.name" . }}
+  minReplicas: {{ .Values.cms.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.cms.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.cms.autoscaling.targetCPUUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.cms.autoscaling.targetCPUUtilizationPercentage }}
+    {{- end }}
+    {{- if .Values.cms.autoscaling.targetMemoryUtilizationPercentage }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.cms.autoscaling.targetMemoryUtilizationPercentage }}
+    {{- end }}
+{{- end }}
